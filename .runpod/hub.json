@@ -1,0 +1,18 @@
+{
+    "title": "Wan Animate",
+    "description": "Wan-Animate can animate any character based on a performer's video, precisely replicating the performer's facial expressions and movements to generate highly realistic character videos.",
+    "type": "serverless",
+    "category": "video",
+    "iconUrl": "https://github.com/wlsdml1114/Engui_Studio/blob/main/assets/logo.png?raw=true",
+  
+    "config": {
+      "runsOn": "GPU",
+      "containerDiskInGb": 50,
+  
+      "gpuCount": 1,
+      "gpuIds": "ADA_24,ADA_32_PRO",
+      "allowedCudaVersions": [
+        "12.9", "12.8"
+      ]
+    }
+}
