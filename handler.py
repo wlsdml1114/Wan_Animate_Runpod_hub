@@ -210,7 +210,11 @@ def handler(job):
     prompt["150"]["inputs"]["value"] = job_input["width"]
     prompt["151"]["inputs"]["value"] = job_input["height"]
 
-    prompt["107"]["inputs"]["points_store"] = job_input["width"]
+    prompt["107"]["inputs"]["points_store"] = job_input["points_store"]
+    prompt["107"]["inputs"]["coordinates"] = job_input["coordinates"]
+    prompt["107"]["inputs"]["neg_coordinates"] = job_input["neg_coordinates"]
+    prompt["107"]["inputs"]["width"] = job_input["width"]
+    prompt["107"]["inputs"]["height"] = job_input["height"]
     
 
     ws_url = f"ws://{server_address}:8188/ws?clientId={client_id}"
