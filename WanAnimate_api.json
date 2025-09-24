@@ -84,7 +84,7 @@
       "pingpong": false,
       "save_output": false,
       "images": [
-        "28",
+        "42",
         0
       ],
       "audio": [
@@ -115,11 +115,23 @@
   "38": {
     "inputs": {
       "model_name": "Wan2_1_VAE_bf16.safetensors",
-      "precision": "fp32"
+      "precision": "bf16"
     },
     "class_type": "WanVideoVAELoader",
     "_meta": {
       "title": "WanVideo VAE Loader"
+    }
+  },
+  "42": {
+    "inputs": {
+      "image": [
+        "28",
+        0
+      ]
+    },
+    "class_type": "GetImageSizeAndCount",
+    "_meta": {
+      "title": "Get Image Size & Count"
     }
   },
   "48": {
@@ -171,7 +183,7 @@
   },
   "57": {
     "inputs": {
-      "image": "image.jpeg"
+      "image": "1697944025399.jpg"
     },
     "class_type": "LoadImage",
     "_meta": {
@@ -436,8 +448,8 @@
   },
   "107": {
     "inputs": {
-      "points_store": "{\"positive\":[{\"x\":481.0609438864368,\"y\":275.2015309620607},{\"x\":483.22788507511444,\"y\":320.7072959242912},{\"x\":466.9758261600321,\"y\":130.0164713206586}],\"negative\":[{\"x\":0,\"y\":0}]}",
-      "coordinates": "[{\"x\":481.0609438864368,\"y\":275.2015309620607},{\"x\":483.22788507511444,\"y\":320.7072959242912},{\"x\":466.9758261600321,\"y\":130.0164713206586}]",
+      "points_store": "{\"positive\":[{\"x\":483.34844284815,\"y\":333.283583335728},{\"x\":479.85856239437277,\"y\":158.78956064686517}],\"negative\":[{\"x\":0,\"y\":0}]}",
+      "coordinates": "[{\"x\":483.34844284815,\"y\":333.283583335728},{\"x\":479.85856239437277,\"y\":158.78956064686517}]",
       "neg_coordinates": "[{\"x\":0,\"y\":0}]",
       "bbox_store": "[{}]",
       "bboxes": "[{}]",
