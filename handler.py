@@ -171,7 +171,7 @@ def handler(job):
 
     logger.info(f"Received job input: {job_input}")
     task_id = f"task_{uuid.uuid4()}"
-    
+
     if job_input["image_path"] == "/example_image.png":
         return {"video": "test"}
 
@@ -202,7 +202,7 @@ def handler(job):
         logger.info("기본 이미지 파일을 사용합니다: /examples/image.jpg")
 
     
-    prompt = load_workflow('/wanAnimate_api.json')
+    prompt = load_workflow('/WanAnimate_api.json')
     
     prompt["57"]["inputs"]["image"] = image_path
     prompt["63"]["inputs"]["video"] = video_path
