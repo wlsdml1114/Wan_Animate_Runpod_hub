@@ -206,6 +206,8 @@ def handler(job):
     
     prompt["57"]["inputs"]["image"] = image_path
     prompt["63"]["inputs"]["video"] = video_path
+    prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
+    prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
     prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
     prompt["27"]["inputs"]["seed"] = job_input["seed"]
     prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
