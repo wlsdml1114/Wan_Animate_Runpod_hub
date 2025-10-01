@@ -202,7 +202,7 @@ def handler(job):
         logger.info("기본 이미지 파일을 사용합니다: /examples/image.jpg")
 
     
-    prompt = load_workflow('/WanAnimate_api.json')
+    prompt = load_workflow('/newWanAnimate_api.json')
     
     prompt["57"]["inputs"]["image"] = image_path
     prompt["63"]["inputs"]["video"] = video_path
@@ -218,8 +218,8 @@ def handler(job):
     prompt["107"]["inputs"]["points_store"] = job_input["points_store"]
     prompt["107"]["inputs"]["coordinates"] = job_input["coordinates"]
     prompt["107"]["inputs"]["neg_coordinates"] = job_input["neg_coordinates"]
-    prompt["107"]["inputs"]["width"] = job_input["width"]
-    prompt["107"]["inputs"]["height"] = job_input["height"]
+    # prompt["107"]["inputs"]["width"] = job_input["width"]
+    # prompt["107"]["inputs"]["height"] = job_input["height"]
     
 
     ws_url = f"ws://{server_address}:8188/ws?clientId={client_id}"
