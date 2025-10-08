@@ -67,11 +67,14 @@ The `input` object must contain the following fields. `image_path`, `image_url`,
 **Request Example:**
 
 ```json
+# image_path and video_path are for Runpod Network volume
+# if you upload to network volume : /input_video-input_zl4by6olkwe_dropped_video.mp4
+# it will be path : /runpod-volume/input_video-input_zl4by6olkwe_dropped_video.mp4
 {
   "input": {
     "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
-    "image_path": "https://path/to/your/image.jpg",
-    "video_path": "https://path/to/your/reference_video.mp4",
+    "image_path": "/runpod-volume/input_video-input_zl4by6olkwe_dropped_image.png",
+    "video_path": "/runpod-volume/input_video-input_zl4by6olkwe_dropped_video.mp4",
     "seed": 12345,
     "width": 832,
     "height": 480,
@@ -81,6 +84,40 @@ The `input` object must contain the following fields. `image_path`, `image_url`,
     "points_store": "{\"positive\":[{\"x\":483.34844284815,\"y\":333.283583335728},{\"x\":479.85856239437277,\"y\":158.78956064686517}],\"negative\":[{\"x\":0,\"y\":0}]}",
     "coordinates": "[{\"x\":483.34844284815,\"y\":333.283583335728},{\"x\":479.85856239437277,\"y\":158.78956064686517}]",
     "neg_coordinates": "[{\"x\":0,\"y\":0}]"
+  }
+}
+
+# url & base64 method for non Runpod Network volume
+{
+  "input": {
+    "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
+    "image_path": "http://your_url",
+    "video_path": "http://your_url",
+    "seed": 12345,
+    "width": 832,
+    "height": 480,
+    "fps": 16,
+    "cfg": 1.0,
+    "steps": 6,
+    "points_store": "{\"positive\":[{\"x\":483.34844284815,\"y\":333.283583335728},{\"x\":479.85856239437277,\"y\":158.78956064686517}],\"negative\":[{\"x\":0,\"y\":0}]}",
+    "coordinates": "[{\"x\":483.34844284815,\"y\":333.283583335728},{\"x\":479.85856239437277,\"y\":158.78956064686517}]",
+    "neg_coordinates": "[{\"x\":0,\"y\":0}]"
+  }
+}
+
+# for auto detection (work with only 1 person video)
+# do not need to get points for SAM
+{
+  "input": {
+    "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
+    "image_path": "http://your_url",
+    "video_path": "http://your_url",
+    "seed": 12345,
+    "width": 832,
+    "height": 480,
+    "fps": 16,
+    "cfg": 1.0,
+    "steps": 6
   }
 }
 ```
@@ -130,13 +167,14 @@ Instead of directly transmitting Base64 encoded files, you can use RunPod's Netw
 
 1.  **Create and Connect Network Volume**: Create a Network Volume (e.g., S3-based volume) from the RunPod dashboard and connect it to your Serverless Endpoint settings.
 2.  **Upload Files**: Upload the image and video files you want to use to the created Network Volume.
-3.  **Specify Paths**: When making an API request, specify the file paths within the Network Volume for `image_path` and `video_path`. For example, if the volume is mounted at `/my_volume` and you use `image.jpg`, the path would be `"/my_volume/image.jpg"`.
+3.  **Specify Paths**: When making an API request, specify the file paths within the Network Volume for `image_path` and `video_path`. For example, if the volume is mounted at `/my_volume` and you use `image.jpg`, the path would be `"/runpod-volume/image.jpg"`.
 
 ## 🔧 Workflow Configuration
 
 This template includes a workflow configuration:
 
-*   **WanAnimate_api.json**: Image-to-video animation workflow
+*   **newWanAnimate_point_api.json**: Image-to-video animation workflow
+*   **newWanAnimate_noSAM_api.json**: Image-to-video animation workflow
 
 The workflow is based on ComfyUI and includes all necessary nodes for WanAnimate processing, including:
 - WanVideo model loading and configuration

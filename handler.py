@@ -129,8 +129,8 @@ def download_file_from_url(url, output_path):
     try:
         # wget을 사용하여 파일 다운로드
         result = subprocess.run([
-            'wget', '-O', output_path, '--no-verbose', '--timeout=30', url
-        ], capture_output=True, text=True, timeout=60)
+            'wget', '-O', output_path, '--no-verbose', url
+        ], capture_output=True, text=True)
         
         if result.returncode == 0:
             logger.info(f"✅ URL에서 파일을 성공적으로 다운로드했습니다: {url} -> {output_path}")
@@ -201,25 +201,41 @@ def handler(job):
         video_path = "/examples/image.jpg"
         logger.info("기본 이미지 파일을 사용합니다: /examples/image.jpg")
 
-    
-    prompt = load_workflow('/newWanAnimate_api.json')
-    
-    prompt["57"]["inputs"]["image"] = image_path
-    prompt["63"]["inputs"]["video"] = video_path
-    prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
-    prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
-    prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
-    prompt["27"]["inputs"]["seed"] = job_input["seed"]
-    prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
-    prompt["27"]["inputs"]["steps"] = job_input.get("steps", 6)
-    prompt["150"]["inputs"]["value"] = job_input["width"]
-    prompt["151"]["inputs"]["value"] = job_input["height"]
+    check_coord = job_input.get("points_store", None)
 
-    prompt["107"]["inputs"]["points_store"] = job_input["points_store"]
-    prompt["107"]["inputs"]["coordinates"] = job_input["coordinates"]
-    prompt["107"]["inputs"]["neg_coordinates"] = job_input["neg_coordinates"]
-    # prompt["107"]["inputs"]["width"] = job_input["width"]
-    # prompt["107"]["inputs"]["height"] = job_input["height"]
+
+    if check_coord == None:
+        prompt = load_workflow('/newWanAnimate_noSAM_api.json')
+
+        prompt["57"]["inputs"]["image"] = image_path
+        prompt["63"]["inputs"]["video"] = video_path
+        prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
+        prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
+        prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
+        prompt["27"]["inputs"]["seed"] = job_input["seed"]
+        prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
+        prompt["27"]["inputs"]["steps"] = job_input.get("steps", 4)
+        prompt["150"]["inputs"]["value"] = job_input["width"]
+        prompt["151"]["inputs"]["value"] = job_input["height"]
+    else:
+        prompt = load_workflow('/newWanAnimate_point_api.json')
+        
+        prompt["57"]["inputs"]["image"] = image_path
+        prompt["63"]["inputs"]["video"] = video_path
+        prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
+        prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
+        prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
+        prompt["27"]["inputs"]["seed"] = job_input["seed"]
+        prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
+        prompt["27"]["inputs"]["steps"] = job_input.get("steps", 4)
+        prompt["150"]["inputs"]["value"] = job_input["width"]
+        prompt["151"]["inputs"]["value"] = job_input["height"]
+
+        prompt["107"]["inputs"]["points_store"] = job_input["points_store"]
+        prompt["107"]["inputs"]["coordinates"] = job_input["coordinates"]
+        prompt["107"]["inputs"]["neg_coordinates"] = job_input["neg_coordinates"]
+        # prompt["107"]["inputs"]["width"] = job_input["width"]
+        # prompt["107"]["inputs"]["height"] = job_input["height"]
     
 
     ws_url = f"ws://{server_address}:8188/ws?clientId={client_id}"
