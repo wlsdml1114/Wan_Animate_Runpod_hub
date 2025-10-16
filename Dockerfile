@@ -29,11 +29,6 @@ RUN cd /ComfyUI/custom_nodes && \
     git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite && \
     cd ComfyUI-VideoHelperSuite && \
     pip install -r requirements.txt
-    
-RUN cd /ComfyUI/custom_nodes && \
-    git clone https://github.com/Fannovel16/comfyui_controlnet_aux && \
-    cd comfyui_controlnet_aux && \
-    pip install -r requirements.txt
 
 RUN cd /ComfyUI/custom_nodes && \
     git clone https://github.com/kijai/ComfyUI-WanAnimatePreprocess && \
