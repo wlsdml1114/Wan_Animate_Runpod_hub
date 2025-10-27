@@ -104,6 +104,20 @@ def load_workflow(workflow_path):
         return json.load(file)
 
 
+def remove_optional_inputs_from_adaptive_nodes(prompt, remove_bg_images=True, remove_mask=True):
+    """AdaptiveWanVideoAnimateEmbeds 노드에서 선택 입력을 조건부로 제거"""
+    try:
+        for node_id, node in prompt.items():
+            if isinstance(node, dict) and node.get("class_type") == "AdaptiveWanVideoAnimateEmbeds":
+                inputs = node.get("inputs", {})
+                if remove_bg_images and "bg_images" in inputs:
+                    inputs.pop("bg_images", None)
+                if remove_mask and "mask" in inputs:
+                    inputs.pop("mask", None)
+    except Exception as e:
+        logger.warning(f"선택 입력 제거 중 경고: {e}")
+
+
 def process_input(input_data, temp_dir, output_filename, input_type):
     """입력 데이터를 처리하여 파일 경로를 반환하는 함수"""
     if input_type == "path":
@@ -172,8 +186,6 @@ def handler(job):
     logger.info(f"Received job input: {job_input}")
     task_id = f"task_{uuid.uuid4()}"
 
-    if job_input["image_path"] == "/example_image.png":
-        return {"video": "test"}
 
     image_path = None
     # 이미지 입력 처리 (image_path, image_url, image_base64 중 하나만 사용)
@@ -237,6 +249,11 @@ def handler(job):
         # prompt["107"]["inputs"]["width"] = job_input["width"]
         # prompt["107"]["inputs"]["height"] = job_input["height"]
     
+
+    # 조건부로 AdaptiveWanVideoAnimateEmbeds 노드에서 bg_images/mask 제거
+    if job_input.get("mode", "replace") == "animate":
+        logger.info("Animate mode: AdaptiveWanVideoAnimateEmbeds 노드에서 bg_images/mask 입력을 제거합니다.")
+        remove_optional_inputs_from_adaptive_nodes(prompt, remove_bg_images=True, remove_mask=True)
 
     ws_url = f"ws://{server_address}:8188/ws?clientId={client_id}"
     logger.info(f"Connecting to WebSocket: {ws_url}")
