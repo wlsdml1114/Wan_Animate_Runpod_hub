@@ -172,7 +172,7 @@ def handler(job):
     logger.info(f"Received job input: {job_input}")
     task_id = f"task_{uuid.uuid4()}"
 
-    if job_input["image_path"] == "/example_image.png":
+    if job_input.get("image_path") == "/example_image.png":
         return {"video": "test"}
 
     image_path = None
