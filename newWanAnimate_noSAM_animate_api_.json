@@ -22,7 +22,7 @@
       "steps": 4,
       "cfg": 1,
       "shift": 9,
-      "seed": 986652227435440,
+      "seed": 1081475619329404,
       "force_offload": true,
       "scheduler": "dpm++_sde",
       "riflex_freq_index": 0,
@@ -170,7 +170,7 @@
   },
   "57": {
     "inputs": {
-      "image": "result_7eea3479-f326-4e23-b648-f90aead8f95f.png"
+      "image": "result_25vrrfgn6x.png"
     },
     "class_type": "LoadImage",
     "_meta": {
@@ -179,7 +179,7 @@
   },
   "63": {
     "inputs": {
-      "video": "wan22_result_4c417402-c566-4d7a-9304-9900507562ec.mp4",
+      "video": "wan22_result_xnhl20j7ec.mp4",
       "force_rate": 16,
       "custom_width": [
         "150",
@@ -274,7 +274,7 @@
   },
   "150": {
     "inputs": {
-      "value": 512
+      "value": 480
     },
     "class_type": "INTConstant",
     "_meta": {
@@ -283,7 +283,7 @@
   },
   "151": {
     "inputs": {
-      "value": 704
+      "value": 720
     },
     "class_type": "INTConstant",
     "_meta": {
@@ -492,12 +492,12 @@
   "210": {
     "inputs": {
       "width": [
-        "150",
-        0
+        "209",
+        1
       ],
       "height": [
-        "151",
-        0
+        "209",
+        2
       ],
       "retarget_padding": 16,
       "body_stick_width": -1,
@@ -516,12 +516,12 @@
   "216": {
     "inputs": {
       "width": [
-        "150",
-        0
+        "209",
+        1
       ],
       "height": [
-        "151",
-        0
+        "209",
+        2
       ],
       "model": [
         "204",
