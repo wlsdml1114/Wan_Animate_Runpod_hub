@@ -22,7 +22,7 @@
       "steps": 4,
       "cfg": 1,
       "shift": 9,
-      "seed": 899622628429567,
+      "seed": 986652227435440,
       "force_offload": true,
       "scheduler": "dpm++_sde",
       "riflex_freq_index": 0,
@@ -392,6 +392,24 @@
       "title": "Adaptive WanVideo Animate Embeds"
     }
   },
+  "201": {
+    "inputs": {
+      "color": "0, 0, 0",
+      "device": "cpu",
+      "image": [
+        "63",
+        0
+      ],
+      "mask": [
+        "206",
+        0
+      ]
+    },
+    "class_type": "DrawMaskOnImage",
+    "_meta": {
+      "title": "Draw Mask On Image"
+    }
+  },
   "204": {
     "inputs": {
       "vitpose_model": "vitpose_h_wholebody_model.onnx",
@@ -401,6 +419,62 @@
     "class_type": "OnnxDetectionModelLoader",
     "_meta": {
       "title": "ONNX Detection Model Loader"
+    }
+  },
+  "205": {
+    "inputs": {
+      "expand": 10,
+      "incremental_expandrate": 0,
+      "tapered_corners": true,
+      "flip_input": false,
+      "blur_radius": 0,
+      "lerp_alpha": 1,
+      "decay_factor": 1,
+      "fill_holes": false,
+      "mask": [
+        "208",
+        0
+      ]
+    },
+    "class_type": "GrowMaskWithBlur",
+    "_meta": {
+      "title": "Grow Mask With Blur"
+    }
+  },
+  "206": {
+    "inputs": {
+      "block_size": 32,
+      "device": "cpu",
+      "masks": [
+        "205",
+        0
+      ]
+    },
+    "class_type": "BlockifyMask",
+    "_meta": {
+      "title": "Blockify Mask"
+    }
+  },
+  "208": {
+    "inputs": {
+      "keep_model_loaded": false,
+      "individual_objects": false,
+      "sam2_model": [
+        "217",
+        0
+      ],
+      "image": [
+        "209",
+        0
+      ],
+      "bboxes": [
+        "216",
+        3
+      ]
+    },
+    "class_type": "Sam2Segmentation",
+    "_meta": {
+      "title": "Sam2Segmentation"
     }
   },
   "209": {
