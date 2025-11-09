@@ -10,7 +10,7 @@
       "containerDiskInGb": 50,
   
       "gpuCount": 1,
-      "gpuIds": "ADA_24,ADA_32_PRO",
+      "gpuIds": "HOPPER_141",
       "allowedCudaVersions": [
         "12.8"
       ]
