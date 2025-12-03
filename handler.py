@@ -205,6 +205,7 @@ def handler(job):
         prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
         prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
         prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
+        prompt["65"]["inputs"]["negative_prompt"] = job_input.get("negative_prompt", "bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards")
         prompt["27"]["inputs"]["seed"] = job_input["seed"]
         prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
         prompt["27"]["inputs"]["steps"] = job_input.get("steps", 4)
@@ -221,6 +222,7 @@ def handler(job):
         prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
         prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
         prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
+        prompt["65"]["inputs"]["negative_prompt"] = job_input.get("negative_prompt", "bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards")
         prompt["27"]["inputs"]["seed"] = job_input["seed"]
         prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
         prompt["27"]["inputs"]["steps"] = job_input.get("steps", 4)
