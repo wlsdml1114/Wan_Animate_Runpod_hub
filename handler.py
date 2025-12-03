@@ -181,10 +181,6 @@ def handler(job):
         image_path = process_input(job_input["image_url"], task_id, "input_image.jpg", "url")
     elif "image_base64" in job_input:
         image_path = process_input(job_input["image_base64"], task_id, "input_image.jpg", "base64")
-    else:
-        # 기본값 사용
-        image_path = "/examples/image.jpg"
-        logger.info("기본 이미지 파일을 사용합니다: /examples/image.jpg")
 
     video_path = None
     # 비디오 입력 처리 (video_path, video_url, video_base64 중 하나만 사용)
@@ -194,10 +190,6 @@ def handler(job):
         video_path = process_input(job_input["video_url"], task_id, "input_video.mp4", "url")
     elif "video_base64" in job_input:
         video_path = process_input(job_input["video_base64"], task_id, "input_video.mp4", "base64")
-    else:
-        # 기본값 사용 (비디오가 없는 경우 기본 이미지 사용)
-        video_path = "/examples/image.jpg"
-        logger.info("기본 이미지 파일을 사용합니다: /examples/image.jpg")
 
     check_coord = job_input.get("points_store", None)
 
