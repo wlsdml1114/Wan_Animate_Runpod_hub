@@ -57,6 +57,7 @@ result = client.create_animation_from_files(
     image_path="./example_image.jpeg",
     video_path="./example_video.mp4",
     prompt="A person walking in a natural way, soft 3D render style, night time, moonlight",
+    negative_prompt="blurry, low quality, distorted",  # Optional: omit to use default
     seed=12345,
     width=832,
     height=480,
@@ -87,6 +88,7 @@ result = client.create_animation_with_control_points(
     image_path="./example_image.jpeg",
     video_path="./example_video.mp4",
     prompt="A person walking in a natural way, soft 3D render style, night time, moonlight",
+    negative_prompt="blurry, low quality, distorted",  # Optional: omit to use default
     seed=12345,
     width=832,
     height=480,
@@ -107,6 +109,7 @@ batch_result = client.batch_process_animations(
     video_folder_path="./input_videos",
     output_folder_path="./output_animations",
     prompt="A person walking in a natural way, soft 3D render style, night time, moonlight",
+    negative_prompt="blurry, low quality, distorted",  # Optional: omit to use default
     seed=12345,
     width=832,
     height=480,
@@ -149,6 +152,7 @@ The `input` object must contain the following fields. Images and videos can be i
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `prompt` | `string` | **Yes** | - | Description text for the video animation to be generated |
+| `negative_prompt` | `string` | No | - | Negative prompt to avoid unwanted elements in the generated video (uses default if omitted) |
 | `seed` | `integer` | **Yes** | - | Random seed for video generation |
 | `width` | `integer` | **Yes** | - | Width of the output video in pixels |
 | `height` | `integer` | **Yes** | - | Height of the output video in pixels |
@@ -163,6 +167,7 @@ The `input` object must contain the following fields. Images and videos can be i
 {
   "input": {
     "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
     "video_base64": "data:video/mp4;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     "seed": 12345,
@@ -180,6 +185,7 @@ The `input` object must contain the following fields. Images and videos can be i
 {
   "input": {
     "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
     "video_base64": "data:video/mp4;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     "seed": 12345,
@@ -200,6 +206,7 @@ The `input` object must contain the following fields. Images and videos can be i
 {
   "input": {
     "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_path": "/runpod-volume/input_image.png",
     "video_path": "/runpod-volume/reference_video.mp4",
     "seed": 12345,
@@ -217,6 +224,7 @@ The `input` object must contain the following fields. Images and videos can be i
 {
   "input": {
     "prompt": "A person walking in a natural way, soft 3D render style, night time, moonlight",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_url": "https://example.com/image.jpg",
     "video_url": "https://example.com/video.mp4",
     "seed": 12345,
@@ -287,13 +295,14 @@ Instead of directly transmitting Base64 encoded files, you can use RunPod's Netw
 #### `__init__(runpod_endpoint_id, runpod_api_key, s3_endpoint_url, s3_access_key_id, s3_secret_access_key, s3_bucket_name, s3_region)`
 Initialize the client with RunPod endpoint ID, API key, and S3 configuration.
 
-#### `create_animation_from_files(image_path, video_path, prompt, seed, width, height, fps, cfg, steps, points_store, coordinates, neg_coordinates)`
+#### `create_animation_from_files(image_path, video_path, prompt, negative_prompt, seed, width, height, fps, cfg, steps, points_store, coordinates, neg_coordinates)`
 Generate animation from local files with automatic S3 upload.
 
 **Parameters:**
 - `image_path` (str): Path to the input image
 - `video_path` (str, optional): Path to the reference video
 - `prompt` (str): Text prompt for animation generation
+- `negative_prompt` (str, optional): Negative prompt to avoid unwanted elements (default: Chinese negative prompt)
 - `seed` (int): Random seed (default: 12345)
 - `width` (int): Output video width (default: 832)
 - `height` (int): Output video height (default: 480)
@@ -304,13 +313,14 @@ Generate animation from local files with automatic S3 upload.
 - `coordinates` (str, optional): JSON string containing positive coordinates
 - `neg_coordinates` (str, optional): JSON string containing negative coordinates
 
-#### `create_animation_with_control_points(image_path, video_path, prompt, seed, width, height, fps, cfg, steps, positive_points, negative_points)`
+#### `create_animation_with_control_points(image_path, video_path, prompt, negative_prompt, seed, width, height, fps, cfg, steps, positive_points, negative_points)`
 Generate animation with control points from local files.
 
 **Parameters:**
 - `image_path` (str): Path to the input image
 - `video_path` (str, optional): Path to the reference video
 - `prompt` (str): Text prompt for animation generation
+- `negative_prompt` (str, optional): Negative prompt to avoid unwanted elements (default: Chinese negative prompt)
 - `seed` (int): Random seed (default: 12345)
 - `width` (int): Output video width (default: 832)
 - `height` (int): Output video height (default: 480)

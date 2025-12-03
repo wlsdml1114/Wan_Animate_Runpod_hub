@@ -257,6 +257,7 @@ class WanAnimateS3Client:
         image_path: str,
         video_path: Optional[str] = None,
         prompt: str = "A person walking in a natural way",
+        negative_prompt: Optional[str] = None,
         seed: int = 12345,
         width: int = 832,
         height: int = 480,
@@ -274,6 +275,7 @@ class WanAnimateS3Client:
             image_path: Image file path
             video_path: Reference video file path (optional)
             prompt: Animation description text
+            negative_prompt: Negative prompt to avoid unwanted elements (optional)
             seed: Random seed for generation
             width: Output width
             height: Output height
@@ -322,6 +324,10 @@ class WanAnimateS3Client:
             "steps": steps
         }
         
+        # Set negative prompt (if provided)
+        if negative_prompt:
+            input_data["negative_prompt"] = negative_prompt
+        
         # Set image input
         input_data["image_path"] = image_s3_path
         
@@ -348,6 +354,7 @@ class WanAnimateS3Client:
         image_path: str,
         video_path: Optional[str] = None,
         prompt: str = "A person walking in a natural way",
+        negative_prompt: Optional[str] = None,
         seed: int = 12345,
         width: int = 832,
         height: int = 480,
@@ -364,6 +371,7 @@ class WanAnimateS3Client:
             image_path: Image file path
             video_path: Reference video file path (optional)
             prompt: Animation description text
+            negative_prompt: Negative prompt to avoid unwanted elements (optional)
             seed: Random seed for generation
             width: Output width
             height: Output height
@@ -393,6 +401,7 @@ class WanAnimateS3Client:
             image_path=image_path,
             video_path=video_path,
             prompt=prompt,
+            negative_prompt=negative_prompt,
             seed=seed,
             width=width,
             height=height,
@@ -412,6 +421,7 @@ class WanAnimateS3Client:
         valid_image_extensions: tuple = ('.jpg', '.jpeg', '.png', '.bmp'),
         valid_video_extensions: tuple = ('.mp4', '.avi', '.mov', '.mkv'),
         prompt: str = "A person walking in a natural way",
+        negative_prompt: Optional[str] = None,
         seed: int = 12345,
         width: int = 832,
         height: int = 480,
@@ -429,6 +439,7 @@ class WanAnimateS3Client:
             valid_image_extensions: Image file extensions to process
             valid_video_extensions: Video file extensions to process
             prompt: Animation description text
+            negative_prompt: Negative prompt to avoid unwanted elements (optional)
             seed: Random seed for generation
             width: Output width
             height: Output height
@@ -500,6 +511,7 @@ class WanAnimateS3Client:
                 image_path=image_path,
                 video_path=video_path,
                 prompt=prompt,
+                negative_prompt=negative_prompt,
                 seed=seed + i,  # Different seed for each file
                 width=width,
                 height=height,
@@ -580,6 +592,7 @@ def main():
         image_path="./example_image.jpeg",
         video_path="./example_video.mp4",
         prompt="A person walking in a natural way, soft 3D render style, night time, moonlight",
+        negative_prompt="blurry, low quality, distorted",  # Optional: omit to use default
         seed=12345,
         width=832,
         height=480,
@@ -607,6 +620,7 @@ def main():
         image_path="./example_image.jpeg",
         video_path="./example_video.mp4",
         prompt="A person walking in a natural way, soft 3D render style, night time, moonlight",
+        negative_prompt="blurry, low quality, distorted",  # Optional: omit to use default
         seed=12345,
         width=832,
         height=480,

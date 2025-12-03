@@ -56,6 +56,7 @@ result = client.create_animation_from_files(
     image_path="./example_image.jpeg",
     video_path="./example_video.mp4",
     prompt="자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    negative_prompt="blurry, low quality, distorted",  # 선택사항: 생략 시 기본값 사용
     seed=12345,
     width=832,
     height=480,
@@ -86,6 +87,7 @@ result = client.create_animation_with_control_points(
     image_path="./example_image.jpeg",
     video_path="./example_video.mp4",
     prompt="자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    negative_prompt="blurry, low quality, distorted",  # 선택사항: 생략 시 기본값 사용
     seed=12345,
     width=832,
     height=480,
@@ -106,6 +108,7 @@ batch_result = client.batch_process_animations(
     video_folder_path="./input_videos",
     output_folder_path="./output_animations",
     prompt="자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    negative_prompt="blurry, low quality, distorted",  # 선택사항: 생략 시 기본값 사용
     seed=12345,
     width=832,
     height=480,
@@ -148,6 +151,7 @@ print(f"배치 처리 완료: {batch_result['successful']}/{batch_result['total_
 | 매개변수 | 타입 | 필수 | 기본값 | 설명 |
 | --- | --- | --- | --- | --- |
 | `prompt` | `string` | **예** | - | 생성할 비디오 애니메이션에 대한 설명 텍스트 |
+| `negative_prompt` | `string` | 아니오 | - | 생성된 비디오에서 원하지 않는 요소를 피하기 위한 네거티브 프롬프트 (생략 시 기본값 사용) |
 | `seed` | `integer` | **예** | - | 비디오 생성을 위한 랜덤 시드 |
 | `width` | `integer` | **예** | - | 출력 비디오의 픽셀 단위 너비 |
 | `height` | `integer` | **예** | - | 출력 비디오의 픽셀 단위 높이 |
@@ -162,6 +166,7 @@ print(f"배치 처리 완료: {batch_result['successful']}/{batch_result['total_
 {
   "input": {
     "prompt": "자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
     "video_base64": "data:video/mp4;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     "seed": 12345,
@@ -179,6 +184,7 @@ print(f"배치 처리 완료: {batch_result['successful']}/{batch_result['total_
 {
   "input": {
     "prompt": "자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
     "video_base64": "data:video/mp4;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     "seed": 12345,
@@ -199,6 +205,7 @@ print(f"배치 처리 완료: {batch_result['successful']}/{batch_result['total_
 {
   "input": {
     "prompt": "자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_path": "/runpod-volume/input_image.png",
     "video_path": "/runpod-volume/reference_video.mp4",
     "seed": 12345,
@@ -216,6 +223,7 @@ print(f"배치 처리 완료: {batch_result['successful']}/{batch_result['total_
 {
   "input": {
     "prompt": "자연스럽게 걷는 사람, 부드러운 3D 렌더 스타일, 밤 시간, 달빛",
+    "negative_prompt": "blurry, low quality, distorted",
     "image_url": "https://example.com/image.jpg",
     "video_url": "https://example.com/video.mp4",
     "seed": 12345,
@@ -286,13 +294,14 @@ Base64 인코딩된 파일을 직접 전송하는 대신 RunPod의 네트워크 
 #### `__init__(runpod_endpoint_id, runpod_api_key, s3_endpoint_url, s3_access_key_id, s3_secret_access_key, s3_bucket_name, s3_region)`
 RunPod 엔드포인트 ID, API 키, S3 구성을 사용하여 클라이언트를 초기화합니다.
 
-#### `create_animation_from_files(image_path, video_path, prompt, seed, width, height, fps, cfg, steps, points_store, coordinates, neg_coordinates)`
+#### `create_animation_from_files(image_path, video_path, prompt, negative_prompt, seed, width, height, fps, cfg, steps, points_store, coordinates, neg_coordinates)`
 자동 S3 업로드와 함께 로컬 파일에서 애니메이션을 생성합니다.
 
 **매개변수:**
 - `image_path` (str): 입력 이미지의 경로
 - `video_path` (str, 선택사항): 참조 비디오의 경로
 - `prompt` (str): 애니메이션 생성을 위한 텍스트 프롬프트
+- `negative_prompt` (str, 선택사항): 원하지 않는 요소를 피하기 위한 네거티브 프롬프트 (생략 시 기본값 사용)
 - `seed` (int): 랜덤 시드 (기본값: 12345)
 - `width` (int): 출력 비디오 너비 (기본값: 832)
 - `height` (int): 출력 비디오 높이 (기본값: 480)
@@ -303,13 +312,14 @@ RunPod 엔드포인트 ID, API 키, S3 구성을 사용하여 클라이언트를
 - `coordinates` (str, 선택사항): 양수 좌표를 포함하는 JSON 문자열
 - `neg_coordinates` (str, 선택사항): 음수 좌표를 포함하는 JSON 문자열
 
-#### `create_animation_with_control_points(image_path, video_path, prompt, seed, width, height, fps, cfg, steps, positive_points, negative_points)`
+#### `create_animation_with_control_points(image_path, video_path, prompt, negative_prompt, seed, width, height, fps, cfg, steps, positive_points, negative_points)`
 로컬 파일에서 제어점을 사용하여 애니메이션을 생성합니다.
 
 **매개변수:**
 - `image_path` (str): 입력 이미지의 경로
 - `video_path` (str, 선택사항): 참조 비디오의 경로
 - `prompt` (str): 애니메이션 생성을 위한 텍스트 프롬프트
+- `negative_prompt` (str, 선택사항): 원하지 않는 요소를 피하기 위한 네거티브 프롬프트 (생략 시 기본값 사용)
 - `seed` (int): 랜덤 시드 (기본값: 12345)
 - `width` (int): 출력 비디오 너비 (기본값: 832)
 - `height` (int): 출력 비디오 높이 (기본값: 480)
