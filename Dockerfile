@@ -34,6 +34,11 @@ RUN cd /ComfyUI/custom_nodes && \
     git clone https://github.com/kijai/ComfyUI-WanAnimatePreprocess && \
     cd ComfyUI-WanAnimatePreprocess && \
     pip install -r requirements.txt
+    
+RUN cd /ComfyUI/custom_nodes && \
+    git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && \
+    cd ComfyUI-Frame-Interpolation && \
+    python install.py
 
 
 RUN wget -q https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1_VAE_bf16.safetensors -O /ComfyUI/models/vae/Wan2_1_VAE_bf16.safetensors

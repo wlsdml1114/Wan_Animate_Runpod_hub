@@ -266,6 +266,14 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
     with open(base_workflow_path, 'r', encoding='utf-8') as f:
         workflow = json.load(f)
     
+    # 비디오 로드 노드 설정 수정
+    if "130" in workflow:
+        # frame_load_cap 제거 (무제한으로 설정)
+        if "frame_load_cap" in workflow["130"]["inputs"]:
+            workflow["130"]["inputs"]["frame_load_cap"] = 0
+        # force_rate를 16으로 설정
+        workflow["130"]["inputs"]["force_rate"] = 16
+    
     # 비디오 프레임 수 계산
     total_frames = get_video_frame_count(video_path)
     logger.info(f"비디오 총 프레임 수: {total_frames}")
@@ -274,27 +282,32 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
     extend_count = calculate_extend_count(total_frames)
     logger.info(f"필요한 Extend 횟수: {extend_count}")
     
+    # 기본 출력 노드 설정
     if extend_count == 0:
-        # Extend가 필요 없으면 기본 워크플로우 반환
-        return workflow
+        # Extend가 필요 없으면 기본 워크플로우의 출력 노드 사용
+        prev_output_node = "28"
+    else:
+        prev_output_node = None  # 나중에 설정됨
     
-    # 기본 워크플로우의 주요 노드 ID 추출
-    # (onetoall_0extend.json 기준)
-    base_output_node = "28"  # 기본 워크플로우의 출력 노드
-    overlap_node = "169"
-    scheduler_node = "231"
-    cfg_node = "238"
-    vae_node = "38"
-    model_node = "80"
-    text_embeds_node = "16"
-    pose_images_node = "141"
-    pose_prefix_node = "141"  # output 1
-    ref_embeds_node = "105"
-    
-    # 각 Extend 블록 생성 및 연결
-    prev_output_node = base_output_node
-    
-    for i in range(extend_count):
+    # Extend 블록이 있는 경우에만 생성
+    if extend_count > 0:
+        # 기본 워크플로우의 주요 노드 ID 추출
+        # (onetoall_0extend.json 기준)
+        base_output_node = "28"  # 기본 워크플로우의 출력 노드
+        overlap_node = "169"
+        scheduler_node = "231"
+        cfg_node = "238"
+        vae_node = "38"
+        model_node = "80"
+        text_embeds_node = "16"
+        pose_images_node = "141"
+        pose_prefix_node = "141"  # output 1
+        ref_embeds_node = "105"
+        
+        # 각 Extend 블록 생성 및 연결
+        prev_output_node = base_output_node
+        
+        for i in range(extend_count):
         base_id = get_extend_base_id(i)
         logger.info(f"Extend 블록 {i+1}/{extend_count} 생성 중 (base_id: {base_id})...")
         
@@ -313,23 +326,47 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
             ref_embeds_node=ref_embeds_node
         )
         
-        # 워크플로우에 노드 추가
-        workflow.update(extend_nodes)
-        
-        # 다음 Extend 블록을 위한 이전 출력 노드 업데이트
-        prev_output_node = f"{base_id}:249"
+            # 워크플로우에 노드 추가
+            workflow.update(extend_nodes)
+            
+            # 다음 Extend 블록을 위한 이전 출력 노드 업데이트
+            prev_output_node = f"{base_id}:249"
+    
+    # RIFE 프레임 보간 노드 추가 (video combine 직전)
+    # RIFE 노드 ID 생성 (기존 노드 ID와 충돌하지 않도록 큰 번호 사용)
+    rife_node_id = "500"
+    
+    # RIFE 노드 생성 (16fps -> 32fps로 보간, multiplier=2)
+    workflow[rife_node_id] = {
+        "inputs": {
+            "ckpt_name": "rife49.pth",
+            "clear_cache_after_n_frames": 10,
+            "multiplier": 2,
+            "fast_mode": True,
+            "ensemble": True,
+            "scale_factor": 4,
+            "frames": [prev_output_node, 0]
+        },
+        "class_type": "RIFE VFI",
+        "_meta": {
+            "title": "RIFE VFI (recommend rife47 and rife49)"
+        }
+    }
+    logger.info(f"RIFE 프레임 보간 노드 '{rife_node_id}' 생성 (16fps -> 32fps)")
     
     # 최종 출력 노드 업데이트
     # output_node_id가 "139"인 경우 (VHS_VideoCombine)
     if output_node_id in workflow:
-        # 마지막 extend 블록의 출력(output 0)을 최종 출력 노드에 연결
-        workflow[output_node_id]["inputs"]["images"] = [prev_output_node, 0]
-        logger.info(f"최종 출력 노드 '{output_node_id}'를 '{prev_output_node}'에 연결했습니다.")
+        # RIFE 노드의 출력을 video combine에 연결
+        workflow[output_node_id]["inputs"]["images"] = [rife_node_id, 0]
+        # frame_rate를 32로 설정 (RIFE로 2배 보간했으므로)
+        workflow[output_node_id]["inputs"]["frame_rate"] = 32
+        logger.info(f"최종 출력 노드 '{output_node_id}'를 RIFE 노드 '{rife_node_id}'에 연결했습니다 (32fps).")
     else:
         # 출력 노드가 없으면 새로 생성
         workflow[output_node_id] = {
             "inputs": {
-                "frame_rate": 16,
+                "frame_rate": 32,
                 "loop_count": 0,
                 "filename_prefix": "WanVideo_OneToAllAnimation",
                 "format": "video/h264-mp4",
@@ -339,14 +376,14 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
                 "trim_to_audio": False,
                 "pingpong": False,
                 "save_output": False,
-                "images": [prev_output_node, 0]
+                "images": [rife_node_id, 0]
             },
             "class_type": "VHS_VideoCombine",
             "_meta": {
                 "title": "Video Combine 🎥🅥🅗🅢"
             }
         }
-        logger.info(f"새로운 출력 노드 '{output_node_id}'를 생성하고 '{prev_output_node}'에 연결했습니다.")
+        logger.info(f"새로운 출력 노드 '{output_node_id}'를 생성하고 RIFE 노드 '{rife_node_id}'에 연결했습니다 (32fps).")
     
     return workflow
 

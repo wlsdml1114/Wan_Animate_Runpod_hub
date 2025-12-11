@@ -242,12 +242,15 @@ def handler(job):
         
         # 비디오 로드 (노드 "130") - 전체 경로 사용
         prompt["130"]["inputs"]["video"] = video_path
-        prompt["130"]["inputs"]["force_rate"] = job_input.get("fps", 16)
+        prompt["130"]["inputs"]["force_rate"] = 16  # 항상 16으로 설정
         
         # 텍스트 인코딩 (노드 "16")
         prompt["16"]["inputs"]["positive_prompt"] = job_input.get("prompt", "")
+        # negative_prompt가 "" (공백)인 경우 기존 값 유지, 그 외에는 설정
         if "negative_prompt" in job_input:
-            prompt["16"]["inputs"]["negative_prompt"] = job_input["negative_prompt"]
+            if job_input["negative_prompt"] != "":
+                prompt["16"]["inputs"]["negative_prompt"] = job_input["negative_prompt"]
+        # negative_prompt가 없으면 기존 값 유지 (아무것도 하지 않음)
         
         # 샘플러 (노드 "27")
         prompt["27"]["inputs"]["seed"] = job_input.get("seed", 0)
@@ -259,8 +262,8 @@ def handler(job):
         # 스케줄러 (노드 "231")
         prompt["231"]["inputs"]["steps"] = job_input.get("steps", 6)
         
-        # 비디오 결합 (노드 "139")
-        prompt["139"]["inputs"]["frame_rate"] = job_input.get("fps", 16)
+        # 비디오 결합 (노드 "139") - RIFE로 32fps가 되도록 설정
+        prompt["139"]["inputs"]["frame_rate"] = 32
         
         # 이미지 리사이즈 (노드 "203", "204" - width, height)
         if "width" in job_input and "height" in job_input:
