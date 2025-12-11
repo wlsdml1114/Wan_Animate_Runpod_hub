@@ -11,6 +11,7 @@ import urllib.parse
 import binascii # Base64 에러 처리를 위해 import
 import subprocess
 import time
+from workflow_builder import build_dynamic_workflow
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -192,50 +193,79 @@ def handler(job):
         video_path = process_input(job_input["video_base64"], task_id, "input_video.mp4", "base64")
 
     check_coord = job_input.get("points_store", None)
+    
+    # onetoall 워크플로우 사용 여부 확인
+    use_onetoall = job_input.get("workflow_type", "").lower() == "onetoall" or job_input.get("use_onetoall", False)
 
-
-    if check_coord == None:
-        if job_input.get("mode", "replace") == "animate":
-            prompt = load_workflow('/newWanAnimate_noSAM_animate_api.json')
-        else:
-            prompt = load_workflow('/newWanAnimate_noSAM_api.json')
-
-        prompt["57"]["inputs"]["image"] = image_path
-        prompt["63"]["inputs"]["video"] = video_path
-        prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
-        prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
-        prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
-        if "negative_prompt" in job_input:
-            prompt["65"]["inputs"]["negative_prompt"] = job_input["negative_prompt"]
-        prompt["27"]["inputs"]["seed"] = job_input["seed"]
-        prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
-        prompt["27"]["inputs"]["steps"] = job_input.get("steps", 4)
-        prompt["150"]["inputs"]["value"] = job_input["width"]
-        prompt["151"]["inputs"]["value"] = job_input["height"]
-    else:
-        if job_input.get("mode", "replace") == "animate":
-            prompt = load_workflow('/newWanAnimate_point_animate_api.json')
-        else:
-            prompt = load_workflow('/newWanAnimate_point_api.json')
+    if use_onetoall:
+        # onetoall 워크플로우 사용
+        logger.info("🔄 OneToAll 워크플로우 모드 사용")
         
-        prompt["57"]["inputs"]["image"] = image_path
-        prompt["63"]["inputs"]["video"] = video_path
-        prompt["63"]["inputs"]["force_rate"] = job_input["fps"]
-        prompt["30"]["inputs"]["frame_rate"] = job_input["fps"]
-        prompt["65"]["inputs"]["positive_prompt"] = job_input["prompt"]
+        # 필수 입력 확인
+        if not image_path:
+            raise Exception("OneToAll 워크플로우를 사용하려면 이미지가 필요합니다.")
+        if not video_path:
+            raise Exception("OneToAll 워크플로우를 사용하려면 비디오가 필요합니다.")
+        
+        # 기본 워크플로우 경로
+        base_workflow_path = '/workflow/onetoall_0extend.json'
+        
+        # 동적 워크플로우 생성
+        logger.info(f"📹 비디오 길이에 따라 동적 워크플로우 생성 중...")
+        prompt = build_dynamic_workflow(
+            base_workflow_path=base_workflow_path,
+            video_path=video_path,
+            output_node_id="139"
+        )
+        
+        # 생성된 워크플로우를 임시 파일로 저장 (디버깅용)
+        workflow_save_path = os.path.join(task_id, "dynamic_workflow.json")
+        os.makedirs(task_id, exist_ok=True)
+        with open(workflow_save_path, 'w', encoding='utf-8') as f:
+            json.dump(prompt, f, indent=2, ensure_ascii=False)
+        logger.info(f"💾 동적 워크플로우를 '{workflow_save_path}'에 저장했습니다.")
+        
+        # 워크플로우 파라미터 설정
+        # 노드 번호 확인:
+        # "106": LoadImage (이미지 로드)
+        # "130": VHS_LoadVideo (비디오 로드)
+        # "16": WanVideoTextEncode (텍스트 인코딩)
+        # "27": WanVideoSampler (샘플러)
+        # "238": FloatConstant (CFG 값)
+        # "231": WanVideoScheduler (스케줄러)
+        # "139": VHS_VideoCombine (비디오 결합)
+        # "203": INTConstant (width)
+        # "204": INTConstant (height)
+        
+        # 이미지 로드 (노드 "106") - 전체 경로 사용
+        prompt["106"]["inputs"]["image"] = image_path
+        
+        # 비디오 로드 (노드 "130") - 전체 경로 사용
+        prompt["130"]["inputs"]["video"] = video_path
+        prompt["130"]["inputs"]["force_rate"] = job_input.get("fps", 16)
+        
+        # 텍스트 인코딩 (노드 "16")
+        prompt["16"]["inputs"]["positive_prompt"] = job_input.get("prompt", "")
         if "negative_prompt" in job_input:
-            prompt["65"]["inputs"]["negative_prompt"] = job_input["negative_prompt"]
-        prompt["27"]["inputs"]["seed"] = job_input["seed"]
-        prompt["27"]["inputs"]["cfg"] = job_input["cfg"]
-        prompt["27"]["inputs"]["steps"] = job_input.get("steps", 4)
-        prompt["150"]["inputs"]["value"] = job_input["width"]
-        prompt["151"]["inputs"]["value"] = job_input["height"]
-
-        prompt["107"]["inputs"]["points_store"] = job_input["points_store"]
-        prompt["107"]["inputs"]["coordinates"] = job_input["coordinates"]
-        prompt["107"]["inputs"]["neg_coordinates"] = job_input["neg_coordinates"]
-        # prompt["107"]["inputs"]["width"] = job_input["width"]
-        # prompt["107"]["inputs"]["height"] = job_input["height"]
+            prompt["16"]["inputs"]["negative_prompt"] = job_input["negative_prompt"]
+        
+        # 샘플러 (노드 "27")
+        prompt["27"]["inputs"]["seed"] = job_input.get("seed", 0)
+        prompt["27"]["inputs"]["steps"] = job_input.get("steps", 6)
+        
+        # CFG (노드 "238")
+        prompt["238"]["inputs"]["value"] = job_input.get("cfg", 1.0)
+        
+        # 스케줄러 (노드 "231")
+        prompt["231"]["inputs"]["steps"] = job_input.get("steps", 6)
+        
+        # 비디오 결합 (노드 "139")
+        prompt["139"]["inputs"]["frame_rate"] = job_input.get("fps", 16)
+        
+        # 이미지 리사이즈 (노드 "203", "204" - width, height)
+        if "width" in job_input and "height" in job_input:
+            prompt["203"]["inputs"]["value"] = job_input["width"]
+            prompt["204"]["inputs"]["value"] = job_input["height"]
     
 
     ws_url = f"ws://{server_address}:8188/ws?clientId={client_id}"
