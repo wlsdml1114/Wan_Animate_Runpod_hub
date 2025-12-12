@@ -242,7 +242,10 @@ def handler(job):
         
         # 비디오 로드 (노드 "130") - 전체 경로 사용
         prompt["130"]["inputs"]["video"] = video_path
-        prompt["130"]["inputs"]["force_rate"] = 16  # 항상 16으로 설정
+        # force_rate는 강제하지 않습니다 (입력 비디오 FPS 그대로 사용).
+        # base workflow / workflow_builder에서 0으로 유지됩니다.
+        if "force_rate" in prompt["130"]["inputs"]:
+            prompt["130"]["inputs"]["force_rate"] = 0
         
         # 텍스트 인코딩 (노드 "16")
         prompt["16"]["inputs"]["positive_prompt"] = job_input.get("prompt", "")
@@ -262,8 +265,9 @@ def handler(job):
         # 스케줄러 (노드 "231")
         prompt["231"]["inputs"]["steps"] = job_input.get("steps", 6)
         
-        # 비디오 결합 (노드 "139") - RIFE로 32fps가 되도록 설정
-        prompt["139"]["inputs"]["frame_rate"] = 32
+        # 비디오 결합 (노드 "139")
+        # workflow_builder가 입력 비디오 FPS를 읽어 frame_rate에 반영합니다.
+        # 여기서는 frame_rate를 덮어쓰지 않습니다.
         
         # 이미지 리사이즈 (노드 "203", "204" - width, height)
         if "width" in job_input and "height" in job_input:

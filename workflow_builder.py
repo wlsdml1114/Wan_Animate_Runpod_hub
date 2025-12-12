@@ -43,6 +43,23 @@ def get_video_frame_count(video_path):
         raise
 
 
+def get_video_fps(video_path):
+    """비디오의 FPS를 반환합니다. (읽기 실패 시 None)"""
+    try:
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise ValueError(f"비디오를 열 수 없습니다: {video_path}")
+        fps = float(cap.get(cv2.CAP_PROP_FPS))
+        cap.release()
+        # 일부 컨테이너/코덱에서 0.0이 나올 수 있음
+        if not fps or fps <= 0:
+            return None
+        return fps
+    except Exception as e:
+        logger.warning(f"비디오 FPS 측정 실패(무시): {e}")
+        return None
+
+
 def calculate_extend_count(total_frames, window_size=81, overlap=5):
     """
     필요한 Extend 횟수를 계산합니다.
@@ -66,6 +83,8 @@ def calculate_extend_count(total_frames, window_size=81, overlap=5):
     
     # 필요한 Extend 횟수 계산
     extend_count = (remaining_frames + frames_per_extend - 1) // frames_per_extend
+    
+    logger.info(f"Extend 계산: 총 {total_frames}프레임, 기본 {window_size}프레임 처리 후 남은 {remaining_frames}프레임, Extend당 {frames_per_extend}프레임 추가, 필요 Extend: {extend_count}개")
     
     return max(0, extend_count)
 
@@ -112,9 +131,12 @@ def create_extend_block(base_id, prev_output_node, overlap_node, scheduler_node,
     nodes = {}
     
     # 1. GetImageSizeAndCount (260)
+    # 이전 Extend 블록의 output 2를 사용 (확장된 이미지 배치)
+    # 첫 번째 Extend 블록이면 기본 워크플로우의 output 0 사용
+    prev_output_index = 2 if ":" in prev_output_node else 0
     nodes[f"{base_id}:260"] = {
         "inputs": {
-            "image": [prev_output_node, 0]
+            "image": [prev_output_node, prev_output_index]
         },
         "class_type": "GetImageSizeAndCount",
         "_meta": {
@@ -123,9 +145,16 @@ def create_extend_block(base_id, prev_output_node, overlap_node, scheduler_node,
     }
     
     # 2. ImageBatchExtendWithOverlap (243) - 첫 번째
+    # 첫 번째 Extend 블록(base_id=263)인 경우 overlap을 직접 값 5로 설정
+    # 다른 Extend 블록은 노드 참조 사용
+    if base_id == 263:
+        overlap_value = 5  # 첫 번째 Extend는 직접 값 사용
+    else:
+        overlap_value = [overlap_node, 0]  # 나머지는 노드 참조 사용
+    
     nodes[f"{base_id}:243"] = {
         "inputs": {
-            "overlap": [overlap_node, 0],
+            "overlap": overlap_value,
             "overlap_side": "source",
             "overlap_mode": "linear_blend",
             "source_images": [f"{base_id}:260", 0]
@@ -233,9 +262,16 @@ def create_extend_block(base_id, prev_output_node, overlap_node, scheduler_node,
     }
     
     # 8. ImageBatchExtendWithOverlap (249) - 최종 병합
+    # 첫 번째 Extend 블록(base_id=263)인 경우 overlap을 직접 값 5로 설정
+    # 다른 Extend 블록은 노드 참조 사용
+    if base_id == 263:
+        overlap_value_249 = 5  # 첫 번째 Extend는 직접 값 사용
+    else:
+        overlap_value_249 = [overlap_node, 0]  # 나머지는 노드 참조 사용
+    
     nodes[f"{base_id}:249"] = {
         "inputs": {
-            "overlap": [overlap_node, 0],
+            "overlap": overlap_value_249,
             "overlap_side": "source",
             "overlap_mode": "linear_blend",
             "source_images": [f"{base_id}:243", 0],
@@ -266,17 +302,40 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
     with open(base_workflow_path, 'r', encoding='utf-8') as f:
         workflow = json.load(f)
     
-    # 비디오 로드 노드 설정 수정
-    if "130" in workflow:
-        # frame_load_cap 제거 (무제한으로 설정)
-        if "frame_load_cap" in workflow["130"]["inputs"]:
-            workflow["130"]["inputs"]["frame_load_cap"] = 0
-        # force_rate를 16으로 설정
-        workflow["130"]["inputs"]["force_rate"] = 16
-    
-    # 비디오 프레임 수 계산
+    # 비디오 프레임 수 계산 (원본 파일 기준)
     total_frames = get_video_frame_count(video_path)
     logger.info(f"비디오 총 프레임 수: {total_frames}")
+    source_fps = get_video_fps(video_path)
+    if source_fps is not None:
+        logger.info(f"비디오 FPS: {source_fps}")
+    else:
+        logger.info("비디오 FPS를 읽지 못해, VideoCombine의 기존 frame_rate 값을 유지합니다.")
+
+    # 비디오 로드 노드 설정 수정
+    # IMPORTANT:
+    # - VHS_LoadVideo의 frame_load_cap=0이 "무제한"이 아니라 "기본값/0"으로 해석되는 환경이 있어,
+    #   긴 비디오에서 pose 배치가 짤리면서 extend가 앞부분을 다시 참조(반복)하는 문제가 발생할 수 있습니다.
+    # - 따라서 동적 워크플로우에서는 frame_load_cap을 명시적으로 충분히 크게 설정합니다.
+    if "130" in workflow:
+        if "frame_load_cap" in workflow["130"]["inputs"]:
+            workflow["130"]["inputs"]["frame_load_cap"] = max(int(total_frames), 1)
+        # force_rate는 강제하지 않습니다. (원본 FPS 사용)
+        # base workflow 기본값(대개 0)을 유지하거나, 존재하면 0으로 설정합니다.
+        if "force_rate" in workflow["130"]["inputs"]:
+            workflow["130"]["inputs"]["force_rate"] = 0
+    
+    # 기본 워크플로우의 num_frames 설정
+    # 노드 "99" (WanVideoEmptyEmbeds)와 "195" (GetImageRangeFromBatch)의 num_frames 설정
+    # window_size는 81로 유지하되, 실제 비디오 길이에 맞게 조정
+    window_size = 81
+    if total_frames <= window_size:
+        # 비디오가 81프레임 이하면 전체 프레임 수 사용
+        workflow["99"]["inputs"]["num_frames"] = total_frames
+        workflow["195"]["inputs"]["num_frames"] = total_frames
+    else:
+        # 비디오가 81프레임보다 길면 window_size 사용 (Extend로 처리)
+        workflow["99"]["inputs"]["num_frames"] = window_size
+        workflow["195"]["inputs"]["num_frames"] = window_size
     
     # 필요한 Extend 횟수 계산
     extend_count = calculate_extend_count(total_frames)
@@ -330,43 +389,41 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
             workflow.update(extend_nodes)
             
             # 다음 Extend 블록을 위한 이전 출력 노드 업데이트
+            # ImageBatchExtendWithOverlap의 output 2가 확장된 이미지 배치
             prev_output_node = f"{base_id}:249"
-    
-    # RIFE 프레임 보간 노드 추가 (video combine 직전)
-    # RIFE 노드 ID 생성 (기존 노드 ID와 충돌하지 않도록 큰 번호 사용)
-    rife_node_id = "500"
-    
-    # RIFE 노드 생성 (16fps -> 32fps로 보간, multiplier=2)
-    workflow[rife_node_id] = {
-        "inputs": {
-            "ckpt_name": "rife49.pth",
-            "clear_cache_after_n_frames": 10,
-            "multiplier": 2,
-            "fast_mode": True,
-            "ensemble": True,
-            "scale_factor": 4,
-            "frames": [prev_output_node, 0]
-        },
-        "class_type": "RIFE VFI",
-        "_meta": {
-            "title": "RIFE VFI (recommend rife47 and rife49)"
-        }
-    }
-    logger.info(f"RIFE 프레임 보간 노드 '{rife_node_id}' 생성 (16fps -> 32fps)")
     
     # 최종 출력 노드 업데이트
     # output_node_id가 "139"인 경우 (VHS_VideoCombine)
+    # - Extend가 있으면 ImageBatchExtendWithOverlap의 output 2(확장된 이미지 배치)를 연결
+    # - Extend가 없으면 기본 WanVideoDecode의 output 0을 연결
+    output_index = 2 if extend_count > 0 else 0
+
+    # 최종 프레임 수를 입력 비디오 프레임 수에 맞게 슬라이스
+    # (extend 과정에서 pad_with_last 등으로 출력 배치가 더 길어질 수 있어, VideoCombine 직전에 잘라줍니다.)
+    slice_node_id = "900"
+    workflow[slice_node_id] = {
+        "inputs": {
+            "start_index": 0,
+            "num_frames": int(total_frames),
+            "images": [prev_output_node, output_index],
+        },
+        "class_type": "GetImageRangeFromBatch",
+        "_meta": {"title": "Get Image or Mask Range From Batch"},
+    }
+
     if output_node_id in workflow:
-        # RIFE 노드의 출력을 video combine에 연결
-        workflow[output_node_id]["inputs"]["images"] = [rife_node_id, 0]
-        # frame_rate를 32로 설정 (RIFE로 2배 보간했으므로)
-        workflow[output_node_id]["inputs"]["frame_rate"] = 32
-        logger.info(f"최종 출력 노드 '{output_node_id}'를 RIFE 노드 '{rife_node_id}'에 연결했습니다 (32fps).")
+        workflow[output_node_id]["inputs"]["images"] = [slice_node_id, 0]
+        if source_fps is not None:
+            workflow[output_node_id]["inputs"]["frame_rate"] = source_fps
+        logger.info(
+            f"최종 출력 노드 '{output_node_id}'를 '{slice_node_id}'[0] (slice {total_frames} frames) 에 연결했습니다"
+            + (f" (fps={source_fps})" if source_fps is not None else "")
+        )
     else:
         # 출력 노드가 없으면 새로 생성
         workflow[output_node_id] = {
             "inputs": {
-                "frame_rate": 32,
+                "frame_rate": source_fps if source_fps is not None else 0,
                 "loop_count": 0,
                 "filename_prefix": "WanVideo_OneToAllAnimation",
                 "format": "video/h264-mp4",
@@ -376,14 +433,14 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
                 "trim_to_audio": False,
                 "pingpong": False,
                 "save_output": False,
-                "images": [rife_node_id, 0]
+                "images": [slice_node_id, 0]
             },
             "class_type": "VHS_VideoCombine",
             "_meta": {
                 "title": "Video Combine 🎥🅥🅗🅢"
             }
         }
-        logger.info(f"새로운 출력 노드 '{output_node_id}'를 생성하고 RIFE 노드 '{rife_node_id}'에 연결했습니다 (32fps).")
+        logger.info(f"새로운 출력 노드 '{output_node_id}'를 생성하고 '{slice_node_id}'[0] (slice {total_frames} frames) 에 연결했습니다.")
     
     return workflow
 
