@@ -308,23 +308,23 @@ def build_dynamic_workflow(base_workflow_path, video_path, output_node_id="139")
         prev_output_node = base_output_node
         
         for i in range(extend_count):
-        base_id = get_extend_base_id(i)
-        logger.info(f"Extend 블록 {i+1}/{extend_count} 생성 중 (base_id: {base_id})...")
-        
-        # Extend 블록 생성
-        extend_nodes = create_extend_block(
-            base_id=base_id,
-            prev_output_node=prev_output_node,
-            overlap_node=overlap_node,
-            scheduler_node=scheduler_node,
-            cfg_node=cfg_node,
-            vae_node=vae_node,
-            model_node=model_node,
-            text_embeds_node=text_embeds_node,
-            pose_images_node=pose_images_node,
-            pose_prefix_node=pose_prefix_node,
-            ref_embeds_node=ref_embeds_node
-        )
+            base_id = get_extend_base_id(i)
+            logger.info(f"Extend 블록 {i+1}/{extend_count} 생성 중 (base_id: {base_id})...")
+            
+            # Extend 블록 생성
+            extend_nodes = create_extend_block(
+                base_id=base_id,
+                prev_output_node=prev_output_node,
+                overlap_node=overlap_node,
+                scheduler_node=scheduler_node,
+                cfg_node=cfg_node,
+                vae_node=vae_node,
+                model_node=model_node,
+                text_embeds_node=text_embeds_node,
+                pose_images_node=pose_images_node,
+                pose_prefix_node=pose_prefix_node,
+                ref_embeds_node=ref_embeds_node
+            )
         
             # 워크플로우에 노드 추가
             workflow.update(extend_nodes)
